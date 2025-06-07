@@ -1,14 +1,51 @@
-build:
-    needs: test
+# .github/workflows/deploy-website.yml
+name: Deploy website
+
+on:
+  push:
+    branches:
+      - main # This workflow runs when code is pushed to the main branch
+
+jobs:
+  test:
     runs-on: ubuntu-latest
-    outputs:
-      script-file: ${{ steps.publish.outputs.script-file }}
+    # Define the default working directory for all 'run' commands in this 'test' job.
+    # This assumes your package.json, package-lock.json, etc., are inside this directory.
     defaults:
       run:
-        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # This is where 'npm run build' runs from
+        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # <--- Correct path for your project
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3 # Checks out your repository's code
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm # Path to the directory to cache
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }} # Cache key based on package-lock.json
+
+      - name: Install dependencies
+        run: npm ci # Installs dependencies from package-lock.json (requires it to be present)
+
+      - name: Lint code
+        run: npm run lint # Runs your project's lint script
+
+      - name: Test code
+        run: npm run test # Runs your project's test script
+
+  build:
+    needs: test # This job will only run after the 'test' job completes successfully
+    runs-on: ubuntu-latest
+    outputs:
+      script-file: ${{ steps.publish.outputs.script-file }} # Outputs the generated JavaScript filename
+    # Define the default working directory for all 'run' commands in this 'build' job.
+    # This assumes your package.json, package-lock.json, etc., are inside this directory.
+    defaults:
+      run:
+        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # <--- Correct path for your project
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3 # Checks out your repository's code
 
       - name: Cache dependencies
         uses: actions/cache@v3
@@ -17,12 +54,12 @@ build:
           key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci # Installs dependencies
 
       - name: Build website
         run: npm run build
 
-      # --- ADD THESE NEW DEBUG STEPS HERE ---
+      # --- DEBUG STEPS (KEEP THESE FOR NOW) ---
       - name: Debug: List files in working directory after build
         run: |
           echo "Listing contents of the current working directory:"
@@ -34,7 +71,7 @@ build:
           echo ""
           echo "Recursive listing from current working directory:"
           ls -R
-      # --- END NEW DEBUG STEPS ---
+      # --- END DEBUG STEPS ---
 
       - name: Publish JS filename
         id: publish
@@ -49,3 +86,16 @@ build:
           compression-level: 6
           overwrite: false
           include-hidden-files: false
+
+  deploy:
+    needs: build # This job will only run after the 'build' job completes successfully
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get build artifacts
+        uses: actions/download-artifact@v3 # Downloads the 'dist-files' artifact
+        with:
+          name: dist-files # Name of the artifact to download
+      - name: Output contents
+        run: ls # Lists the contents of the current directory (should show 'dist' files)
+      - name: Deploy
+        run: echo "Deployment placeholder executed."
