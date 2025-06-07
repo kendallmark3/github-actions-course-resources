@@ -43,24 +43,27 @@ jobs:
     needs: test # This job will only run after the 'test' job completes successfully
     runs-on: ubuntu-latest
     outputs:
-      script-file: <span class="math-inline">\{\{ steps\.publish\.outputs\.script\-file \}\} \# Outputs the generated JavaScript filename
-\# Define the default working directory for all 'run' commands in this 'build' job\.
-\# This assumes your package\.json, package\-lock\.json, etc\., are inside this directory\.
-defaults\:
-run\:
-working\-directory\: '\./Code/04 Artifacts & Outputs/03 Finished Project' \# <\-\-\- Correct path for your project
-steps\:
-\- name\: Get code
-uses\: actions/checkout@v3 \# Checks out your repository's code
-\- name\: Debug\: List files in working directory
-run\: ls \-la \# Displays files in the current working directory to confirm package\-lock\.json is there
-\- name\: Debug\: Print current working directory
-run\: pwd \# Prints the full path of the current working directory
-\- name\: Cache dependencies
-uses\: actions/cache@v3
-with\:
-path\: \~/\.npm
-key\: deps\-node\-modules\-</span>{{ hashFiles('**/package-lock.json') }}
+      script-file: ${{ steps.publish.outputs.script-file }} # Outputs the generated JavaScript filename
+    # Define the default working directory for all 'run' commands in this 'build' job.
+    # This assumes your package.json, package-lock.json, etc., are inside this directory.
+    defaults:
+      run:
+        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # <--- Correct path for your project
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3 # Checks out your repository's code
+
+      - name: Debug: List files in working directory
+        run: ls -la # Displays files in the current working directory to confirm package-lock.json is there
+
+      - name: Debug: Print current working directory
+        run: pwd # Prints the full path of the current working directory
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
         run: npm ci # Installs dependencies
@@ -74,4 +77,30 @@ key\: deps\-node\-modules\-</span>{{ hashFiles('**/package-lock.json') }}
       - name: Publish JS filename
         id: publish # Gives this step an ID to reference its outputs
         # Finds the generated JS file in 'dist/assets' and sets it as an output
-        run: find dist/assets/*.js -type f -execdir echo 'script
+        run: find dist/assets/*.js -type f -execdir echo 'script-file={}' >> $GITHUB_OUTPUT ';'
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-files # Name for the uploaded artifact
+          path: dist # Path to the built files (relative to the working directory)
+
+  deploy:
+    needs: build # This job will only run after the 'build' job completes successfully
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get build artifacts
+        uses: actions/download-artifact@v3 # Downloads the 'dist-files' artifact
+        with:
+          name: dist-files # Name of the artifact to download
+      - name: Output contents
+        run: ls # Lists the contents of the current directory (should show 'dist' files)
+      - name: Output filename
+        run: echo "Generated script file: ${{ needs.build.outputs.script-file }}" # Displays the JS filename from the build job
+      - name: Deploy
+        run: echo "Deploying the website..." # Placeholder for your deployment command
+        # Add your actual deployment commands here.
+        # Since 'dist-files' were downloaded to the current directory,
+        # you'll be operating from the root level of these downloaded files.
+        # For example, if using an action to deploy to a static host, you'd specify 'dist/'
+        # as the publish directory.
