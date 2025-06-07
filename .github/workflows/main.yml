@@ -8,12 +8,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project'
     steps:
       - name: Get code
         uses: actions/checkout@v3
+
+      - name: Set working directory
+        run: echo "Setting working directory"
+        working-directory: ./Code/04\ Artifacts\ \&\ Outputs/03\ Finished\ Project
 
       - name: Cache dependencies
         uses: actions/cache@v3
@@ -23,34 +24,27 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./Code/04 Artifacts & Outputs/03 Finished Project
 
       - name: Build website
         run: npm run build
+        working-directory: ./Code/04 Artifacts & Outputs/03 Finished Project
 
-      # --- CRITICAL DEBUG STEP - DO NOT REMOVE THIS ---
       - name: Debug: Check 'dist' folder contents and path
         run: |
-          echo "--- Current Working Directory for this job step ---"
+          echo "--- Current Working Directory ---"
           pwd
-          echo ""
-          echo "--- Contents of Current Working Directory ---"
-          ls -F
-          echo ""
-          echo "--- Contents of 'dist' folder (if found) ---"
-          ls -F dist/ || echo "Error: 'dist' folder not found or is empty at this location!"
-          echo ""
-          echo "--- Absolute path to 'dist' folder (if exists) ---"
-          if [ -d "dist" ]; then realpath dist; else echo "'dist' folder does not exist."; fi
-          echo ""
-          echo "--- Recursive listing from Current Working Directory ---"
-          ls -R
-      # --- END CRITICAL DEBUG STEP ---
+          echo "--- Contents of 'dist' folder ---"
+          ls -F dist/ || echo "dist folder not found"
+          echo "--- Absolute path to 'dist' ---"
+          if [ -d "dist" ]; then realpath dist; else echo "dist does not exist"; fi
+        working-directory: ./Code/04 Artifacts & Outputs/03 Finished Project
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-files
-          path: dist
+          path: ./Code/04 Artifacts & Outputs/03 Finished Project/dist
           if-no-files-found: warn
           compression-level: 6
           overwrite: false
@@ -59,9 +53,6 @@ jobs:
   test:
     needs: build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project'
     steps:
       - name: Get code
         uses: actions/checkout@v3
@@ -74,8 +65,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        working-directory: ./Code/04 Artifacts & Outputs/03 Finished Project
 
       - name: Lint code
         run: npm run lint
+        working-directory: ./Code/04 Artifacts & Outputs/03 Finished Project
+
       - name: Test code
         run: npm run test
+        working-directory: ./Code/04 Artifacts & Outputs/03 Finished Project
