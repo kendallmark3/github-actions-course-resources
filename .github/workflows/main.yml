@@ -1,74 +1,68 @@
+# .github/workflows/main.yml - Build and Test Workflow (Cleaned)
 name: Build and Test Workflow
 
 on:
   push:
     branches:
-      - main
+      - main # This workflow runs when code is pushed to the main branch
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Define the default working directory for all 'run' commands and actions in this job
+    defaults:
+      run:
+        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # Your specified subdirectory
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3 # Checks out your repository's code
 
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.npm
-          key: "deps-node-modules-${{ hashFiles('\"Code/04 Artifacts & Outputs/03 Finished Project\"/package-lock.json') }}"
+          path: ~/.npm # Path to the directory to cache
+          # Corrected hashFiles key syntax
+          key: "deps-node-modules-${{ hashFiles('Code/04 Artifacts & Outputs/03 Finished Project/package-lock.json') }}"
 
       - name: Install dependencies
-        run: npm ci
-        working-directory: "Code/04 Artifacts & Outputs/03 Finished Project"
+        run: npm ci # Installs dependencies from package-lock.json
 
       - name: Build website
-        run: npm run build
-        working-directory: "Code/04 Artifacts & Outputs/03 Finished Project"
-
-      - name: Debug: Check 'dist' folder contents and path
-        run: |
-          echo "--- Current Working Directory ---"
-          pwd
-          echo "--- Contents of 'dist' folder ---"
-          ls -F dist/ || echo "dist folder not found"
-          echo "--- Absolute path to 'dist' ---"
-          if [ -d "dist" ]; then realpath dist; else echo "dist does not exist"; fi
-          echo "--- Recursive listing ---"
-          ls -R
-        working-directory: "Code/04 Artifacts & Outputs/03 Finished Project"
+        run: npm run build # Builds your website for production
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4 # Using version 4
         with:
-          name: dist-files
-          path: "Code/04 Artifacts & Outputs/03 Finished Project/dist"
-          if-no-files-found: warn
+          name: dist-files # Name for the uploaded artifact
+          path: dist # Path to the built files (relative to the working directory)
+          if-no-files-found: warn # Warn if no files found, but don't fail job
           compression-level: 6
           overwrite: false
           include-hidden-files: false
 
   test:
-    needs: build
+    needs: build # This job will only run after the 'build' job completes successfully
     runs-on: ubuntu-latest
+    # Define the default working directory for all 'run' commands in this job.
+    defaults:
+      run:
+        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # Your specified subdirectory
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3 # Checks out your repository's code
 
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.npm
-          key: "deps-node-modules-${{ hashFiles('\"Code/04 Artifacts & Outputs/03 Finished Project\"/package-lock.json') }}"
+          path: ~/.npm # Path to the directory to cache
+          # Corrected hashFiles key syntax
+          key: "deps-node-modules-${{ hashFiles('Code/04 Artifacts & Outputs/03 Finished Project/package-lock.json') }}"
 
       - name: Install dependencies
-        run: npm ci
-        working-directory: "Code/04 Artifacts & Outputs/03 Finished Project"
+        run: npm ci # Installs dependencies from package-lock.json
 
       - name: Lint code
-        run: npm run lint
-        working-directory: "Code/04 Artifacts & Outputs/03 Finished Project"
+        run: npm run lint # Runs your project's lint script
 
       - name: Test code
-        run: npm run test
-        working-directory: "Code/04 Artifacts & Outputs/03 Finished Project"
+        run: npm run test # Runs your project's test script
