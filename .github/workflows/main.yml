@@ -1,20 +1,19 @@
-# .github/workflows/main.yml - Workflow with Build and Test jobs (and Debugging for dist)
 name: Build and Test Workflow
 
 on:
   push:
     branches:
-      - main # This workflow runs when code is pushed to the main branch
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # Your specified subdirectory
+        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project'
     steps:
       - name: Get code
-        uses: actions/checkout@v3 # Checks out your repository's code
+        uses: actions/checkout@v3
 
       - name: Cache dependencies
         uses: actions/cache@v3
