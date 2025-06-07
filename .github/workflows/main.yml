@@ -1,5 +1,5 @@
-# .github/workflows/main.yml - Workflow with testing job
-name: Workflow with Tests
+# .github/workflows/main.yml - Workflow with Build and Test jobs
+name: Build and Test Workflow
 
 on:
   push:
@@ -7,10 +7,42 @@ on:
       - main # This workflow runs when code is pushed to the main branch
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Define the default working directory for all 'run' commands and actions
+    defaults:
+      run:
+        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # Your specified subdirectory
+    steps:
+      - name: Get code
+        uses: actions/checkout@v3 # Checks out your repository's code
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm # Path to the directory to cache
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }} # Cache key based on package-lock.json
+
+      - name: Install dependencies
+        run: npm ci # Installs dependencies from package-lock.json
+
+      - name: Build website
+        run: npm run build # Builds your website for production
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4 # Using version 4 as required
+        with:
+          name: dist-files # Name for the uploaded artifact
+          path: dist # Path to the built files (relative to the working directory)
+          if-no-files-found: warn # Warn if no files found, but don't fail job
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
+
   test:
+    needs: build # This job will only run after the 'build' job completes successfully
     runs-on: ubuntu-latest
     # Define the default working directory for all 'run' commands in this 'test' job.
-    # This assumes your package.json, package-lock.json, etc., are inside this directory.
     defaults:
       run:
         working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # Your specified subdirectory
