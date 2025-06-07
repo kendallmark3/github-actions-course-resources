@@ -1,85 +1,17 @@
-# .github/workflows/deploy-website.yml - Streamlined for core functionality (with path debug)
-name: Deploy website
+# .github/workflows/main.yml - Barebones workflow for testing parsing
+name: Basic Workflow Test
 
 on:
   push:
     branches:
-      - main # This workflow runs when code is pushed to the main branch ok
+      - main
 
 jobs:
-  test:
+  run-simple-command:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project'
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3 # Checks out your repository's code
 
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint code
-        run: npm run lint
-
-      - name: Test code
-        run: npm run test
-
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project'
-    steps:
-      - name: Get code
-        uses: actions/checkout@v3
-
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build website
-        run: npm run build
-
-      # --- NEW DEBUG STEP TO GET PATH ---
-      - name: Debug: Check 'dist' folder contents
-        run: |
-          echo "Current working directory (where 'dist' is expected to be):"
-          pwd
-          echo ""
-          echo "Contents of 'dist' folder:"
-          ls -F dist/ || echo "Error: 'dist' folder not found or is empty here!"
-      # --- END NEW DEBUG STEP ---
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4 # Updated to v4
-        with:
-          name: dist-files
-          path: dist # Path to the built files (relative to the working directory)
-          if-no-files-found: warn
-          compression-level: 6
-          overwrite: false
-          include-hidden-files: false
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get build artifacts
-        uses: actions/download-artifact@v4 # Updated to v4
-        with:
-          name: dist-files
-      - name: Deploy
-        run: echo "Deployment placeholder executed."
+      - name: Run a simple command
+        run: echo "Hello, GitHub Actions! This workflow ran successfully."
