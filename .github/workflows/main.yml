@@ -83,7 +83,5 @@ jobs:
           name: dist-files # Name of the artifact to download
       - name: Output contents
         run: ls # Lists the contents of the current directory (should show 'dist' files)
-      - name: Output filename
-        run: echo "Generated script file: ${{ needs.build.outputs.script-file }}" # Displays the JS filename from the build job
       - name: Deploy
-        run: echo "Deployment placeholder executed. now"
+        run: echo "Deployment placeholder executed."
