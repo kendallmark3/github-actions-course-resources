@@ -1,4 +1,4 @@
-# .github/workflows/main.yml - Workflow with Build and Test jobs
+# .github/workflows/main.yml - Workflow with Build and Test jobs (and Debugging for dist)
 name: Build and Test Workflow
 
 on:
@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Define the default working directory for all 'run' commands and actions
     defaults:
       run:
         working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # Your specified subdirectory
@@ -29,6 +28,22 @@ jobs:
       - name: Build website
         run: npm run build # Builds your website for production
 
+      # --- CRITICAL DEBUG STEP - DO NOT REMOVE THIS ---
+      - name: Debug: Check 'dist' folder contents
+        run: |
+          echo "--- Current Working Directory for this job step ---"
+          pwd
+          echo ""
+          echo "--- Contents of Current Working Directory ---"
+          ls -F
+          echo ""
+          echo "--- Contents of 'dist' folder (if found) ---"
+          ls -F dist/ || echo "Error: 'dist' folder not found or is empty at this location!"
+          echo ""
+          echo "--- Recursive listing from Current Working Directory ---"
+          ls -R
+      # --- END CRITICAL DEBUG STEP ---
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4 # Using version 4 as required
         with:
@@ -42,7 +57,6 @@ jobs:
   test:
     needs: build # This job will only run after the 'build' job completes successfully
     runs-on: ubuntu-latest
-    # Define the default working directory for all 'run' commands in this 'test' job.
     defaults:
       run:
         working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # Your specified subdirectory
