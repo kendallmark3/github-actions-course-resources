@@ -1,51 +1,14 @@
-# .github/workflows/deploy-website.yml
-name: Deploy website
-
-on:
-  push:
-    branches:
-      - main # This workflow runs when code is pushed to the main branch
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    # Define the default working directory for all 'run' commands in this 'test' job.
-    # This assumes your package.json, package-lock.json, etc., are inside this directory.
-    defaults:
-      run:
-        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # <--- Correct path for your project
-    steps:
-      - name: Get code
-        uses: actions/checkout@v3 # Checks out your repository's code
-
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm # Path to the directory to cache
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }} # Cache key based on package-lock.json
-
-      - name: Install dependencies
-        run: npm ci # Installs dependencies from package-lock.json (requires it to be present)
-
-      - name: Lint code
-        run: npm run lint # Runs your project's lint script
-
-      - name: Test code
-        run: npm run test # Runs your project's test script
-
-  build:
-    needs: test # This job will only run after the 'test' job completes successfully
+build:
+    needs: test
     runs-on: ubuntu-latest
     outputs:
-      script-file: ${{ steps.publish.outputs.script-file }} # Outputs the generated JavaScript filename
-    # Define the default working directory for all 'run' commands in this 'build' job.
-    # This assumes your package.json, package-lock.json, etc., are inside this directory.
+      script-file: ${{ steps.publish.outputs.script-file }}
     defaults:
       run:
-        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # <--- Correct path for your project
+        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # This is where 'npm run build' runs from
     steps:
       - name: Get code
-        uses: actions/checkout@v3 # Checks out your repository's code
+        uses: actions/checkout@v3
 
       - name: Cache dependencies
         uses: actions/cache@v3
@@ -54,34 +17,35 @@ jobs:
           key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm ci # Installs dependencies
+        run: npm ci
 
       - name: Build website
-        run: npm run build # Builds your website for production
-        # Note: The 'dist/' path here is relative to the working-directory set above.
-        # So, if your project builds to 'Code/04 Artifacts & Outputs/03 Finished Project/dist',
-        # then 'dist/' is correct.
+        run: npm run build
+
+      # --- ADD THESE NEW DEBUG STEPS HERE ---
+      - name: Debug: List files in working directory after build
+        run: |
+          echo "Listing contents of the current working directory:"
+          pwd # Print current working directory
+          ls -F  # List files and directories, showing trailing slashes for dirs
+          echo ""
+          echo "Listing contents of 'dist' if it exists:"
+          ls -F dist/ || echo "dist directory does not exist or is empty"
+          echo ""
+          echo "Recursive listing from current working directory:"
+          ls -R
+      # --- END NEW DEBUG STEPS ---
 
       - name: Publish JS filename
-        id: publish # Gives this step an ID to reference its outputs
-        # Finds the generated JS file in 'dist/assets' and sets it as an output
+        id: publish
         run: find dist/assets/*.js -type f -execdir echo 'script-file={}' >> $GITHUB_OUTPUT ';'
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dist-files # Name for the uploaded artifact
-          path: dist # Path to the built files (relative to the working directory)
-
-  deploy:
-    needs: build # This job will only run after the 'build' job completes successfully
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get build artifacts
-        uses: actions/download-artifact@v4 # Downloads the 'dist-files' artifact
-        with:
-          name: dist-files # Name of the artifact to download
-      - name: Output contents
-        run: ls # Lists the contents of the current directory (should show 'dist' files)
-      - name: Deploy
-        run: echo "Deployment placeholder executed."
+          name: dist-files
+          path: dist
+          if-no-files-found: warn
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
