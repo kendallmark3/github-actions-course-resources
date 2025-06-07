@@ -1,4 +1,4 @@
-# .github/workflows/main.yml - Workflow with Build and Test jobs
+# .github/workflows/main.yml - Workflow with Build and Test jobs (and Debugging for dist)
 name: Build and Test Workflow
 
 on:
@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Define the default working directory for all 'run' commands and actions
     defaults:
       run:
         working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # Your specified subdirectory
@@ -20,47 +19,65 @@ jobs:
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.npm # Path to the directory to cache
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }} # Cache key based on package-lock.json
+          path: ~/.npm
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm ci # Installs dependencies from package-lock.json
+        run: npm ci
 
       - name: Build website
-        run: npm run build # Builds your website for production
+        run: npm run build
+
+      # --- CRITICAL DEBUG STEP - DO NOT REMOVE THIS ---
+      - name: Debug: Check 'dist' folder contents and path
+        run: |
+          echo "--- Current Working Directory for this job step ---"
+          pwd
+          echo ""
+          echo "--- Contents of Current Working Directory ---"
+          ls -F
+          echo ""
+          echo "--- Contents of 'dist' folder (if found) ---"
+          ls -F dist/ || echo "Error: 'dist' folder not found or is empty at this location!"
+          echo ""
+          echo "--- Absolute path to 'dist' folder (if exists) ---"
+          if [ -d "dist" ]; then realpath dist; else echo "'dist' folder does not exist."; fi
+          echo ""
+          echo "--- Recursive listing from Current Working Directory ---"
+          ls -R
+      # --- END CRITICAL DEBUG STEP ---
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4 # Using version 4 as required
+        uses: actions/upload-artifact@v4
         with:
-          name: dist-files # Name for the uploaded artifact
-          path: dist # Path to the built files (relative to the working directory)
-          if-no-files-found: warn # Warn if no files found, but don't fail job
+          name: dist-files
+          path: dist
+          if-no-files-found: warn
           compression-level: 6
           overwrite: false
           include-hidden-files: false
 
   test:
-    needs: build # This job will only run after the 'build' job completes successfully
+    needs: build
     runs-on: ubuntu-latest
-    # Define the default working directory for all 'run' commands in this 'test' job.
     defaults:
       run:
-        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project' # Your specified subdirectory
+        working-directory: './Code/04 Artifacts & Outputs/03 Finished Project'
     steps:
       - name: Get code
-        uses: actions/checkout@v3 # Checks out your repository's code
+        uses: actions/checkout@v3
 
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
-          path: ~/.npm # Path to the directory to cache
-          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }} # Cache key based on package-lock.json
+          path: ~/.npm
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm ci # Installs dependencies from package-lock.json (requires it to be present)
+        run: npm ci
 
       - name: Lint code
-        run: npm run lint # Runs your project's lint script
+        run: npm run lint
 
       - name: Test code
-        run: npm run test # Runs your project's test script
+        run: npm run test
