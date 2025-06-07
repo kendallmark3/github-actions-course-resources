@@ -18,12 +18,6 @@ jobs:
       - name: Get code
         uses: actions/checkout@v3 # Checks out your repository's code
 
-      - name: Debug: List files in working directory
-        run: ls -la # Displays files in the current working directory to confirm package-lock.json is there
-
-      - name: Debug: Print current working directory
-        run: pwd # Prints the full path of the current working directory
-
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
@@ -52,12 +46,6 @@ jobs:
     steps:
       - name: Get code
         uses: actions/checkout@v3 # Checks out your repository's code
-
-      - name: Debug: List files in working directory
-        run: ls -la # Displays files in the current working directory to confirm package-lock.json is there
-
-      - name: Debug: Print current working directory
-        run: pwd # Prints the full path of the current working directory
 
       - name: Cache dependencies
         uses: actions/cache@v3
