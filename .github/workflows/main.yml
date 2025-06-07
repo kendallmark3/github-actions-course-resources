@@ -86,9 +86,4 @@ jobs:
       - name: Output filename
         run: echo "Generated script file: ${{ needs.build.outputs.script-file }}" # Displays the JS filename from the build job
       - name: Deploy
-        run: echo "Deploying the website..." # Placeholder for your deployment command
-        # Add your actual deployment commands here.
-        # Since 'dist-files' were downloaded to the current directory,
-        # you'll be operating from the root level of these downloaded files.
-        # For example, if using an action to deploy to a static host, you'd specify 'dist/'
-        # as the publish directory.
+        run: echo "Deployment placeholder executed."
