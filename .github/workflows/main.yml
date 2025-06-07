@@ -86,4 +86,4 @@ jobs:
       - name: Output filename
         run: echo "Generated script file: ${{ needs.build.outputs.script-file }}" # Displays the JS filename from the build job
       - name: Deploy
-        run: echo "Deployment placeholder executed."
+        run: echo "Deployment placeholder executed. now"
