@@ -1,4 +1,4 @@
-# .github/workflows/deploy-website.yml - Final clean attempt
+# .github/workflows/deploy-website.yml - Streamlined version
 name: Deploy website
 
 on:
@@ -36,8 +36,7 @@ jobs:
   build:
     needs: test # This job will only run after the 'test' job completes successfully
     runs-on: ubuntu-latest
-    outputs:
-      script-file: ${{ steps.publish.outputs.script-file }} # Outputs the generated JavaScript filename
+    # Removed 'outputs: script-file' as it's no longer needed without dynamic filename finding
     # Define the default working directory for all 'run' commands in this 'build' job.
     # This assumes your package.json, package-lock.json, etc., are inside this directory.
     defaults:
@@ -73,15 +72,13 @@ jobs:
           ls -R
       # --- END DEBUG STEPS ---
 
-      - name: Publish JS filename
-        id: publish
-        run: find dist/assets/*.js -type f -execdir echo 'script-file={}' >> $GITHUB_OUTPUT ';'
+      # The 'Publish JS filename' step is removed as requested for simplicity.
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4 # Ensure this is v4
         with:
-          name: dist-files
-          path: dist
+          name: dist-files # Name for the uploaded artifact
+          path: dist # Path to the built files (relative to the working directory)
           if-no-files-found: warn
           compression-level: 6
           overwrite: false
