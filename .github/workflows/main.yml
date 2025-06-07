@@ -1,4 +1,4 @@
-# .github/workflows/deploy-website.yml - Streamlined for core functionality
+# .github/workflows/deploy-website.yml - Streamlined for core functionality (with path debug)
 name: Deploy website
 
 on:
@@ -53,11 +53,21 @@ jobs:
       - name: Build website
         run: npm run build
 
+      # --- NEW DEBUG STEP TO GET PATH ---
+      - name: Debug: Check 'dist' folder contents
+        run: |
+          echo "Current working directory (where 'dist' is expected to be):"
+          pwd
+          echo ""
+          echo "Contents of 'dist' folder:"
+          ls -F dist/ || echo "Error: 'dist' folder not found or is empty here!"
+      # --- END NEW DEBUG STEP ---
+
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4 # Updated to v4 as per previous fix
+        uses: actions/upload-artifact@v4 # Updated to v4
         with:
           name: dist-files
-          path: dist
+          path: dist # Path to the built files (relative to the working directory)
           if-no-files-found: warn
           compression-level: 6
           overwrite: false
@@ -68,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4 # Updated to v4
         with:
           name: dist-files
       - name: Deploy
